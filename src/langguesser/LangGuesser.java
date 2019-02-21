@@ -1,21 +1,13 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package langguesser;
 
-/**
- *
- * @author jfwickstr
- */
 public class LangGuesser {
-
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
-        // TODO code application logic here
+        
+        Backend backend = new Backend();
+        
+        // DATA
+        String query = "Trump was born and raised in the New York City. Borough of Queens and received an economics degree from the Wharton School";
     }
     
+    public static void log(Object content) { System.out.println(content); }
 }
