@@ -27,7 +27,7 @@ public class Dataset {
         
         // NUKE SPECIAL CHARACTERS
         data = data.replaceAll("[^a-z\\såäöæøüßàèéì'çšžõ]", "");
-               
+        
         // SHRINK MULTIPLE SPACES INTO ONE
         data = data.replaceAll("( +)", " ");
         

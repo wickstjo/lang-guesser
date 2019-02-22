@@ -70,7 +70,7 @@ public class Backend {
             while ((line = reader.readLine()) != null) { content += line; }
             
         // ON ERROR, LOG IT
-        } catch (Exception ex) { log(ex); }
+        } catch (Exception ex) { System.out.println(ex); }
         
         return content;
     }
@@ -83,12 +83,5 @@ public class Backend {
         
         // CLONE A TEMPLATE HASHMAP
         HashMap<String, Double> temp = this.template;
-    }
-    
-    private void log(Object content) { System.out.println(content); }
-    private void loop(HashMap<String, Double> map) {
-        for (String key : map.keySet()) {
-            log(key + " => " + map.get(key));
-        }
     }
 }
