@@ -1,36 +1,39 @@
 package langguesser;
 import java.util.HashMap;
 
-public class Analysis {
+public class Dataset {
     
-    // DATASET
-    private final String data;
-   
-    // SCORE PLACEHOLDERS
-    private double letters = 0;
-    private double windows = 0;
-    private double firsts = 0;
+    // HASHMAPS
+    private HashMap<String, Double> letters = new HashMap();
+    private HashMap<String, Double> windows = new HashMap();
+    private HashMap<String, Double> firsts = new HashMap();
     
     // CONSTRUCTOR
-    public Analysis(String _data) {
+    public Dataset(String data) {
         
         // FORCE LOWERCASE & SET
-         this.data = _data.toLowerCase();
+        data = sanitize(data);
         
-        // FIND THE SCORES
-        letters();
-        windows();
-        firsts();
+        // RUN MODULES
+        letters(data);
+        windows(data);
+        firsts(data);
+    }
+    
+    // SANITIZE DATA
+    private String sanitize(String data) {
+        
+        // FORCE LOWERCASE
+        data = data.toLowerCase();
+        
+        return data;
     }
     
     // FIND LETTER OCCURRANCE
-    private void letters() {
+    private void letters(String data) {
             
-        // DECLARE CONTAINER
-        HashMap<String, Double> container = new HashMap();
-        
         // NUKE WHITESPACE
-        String data = this.data.replaceAll("\\s+","");
+        data = data.replaceAll("\\s+","");
         
         // SPLIT THE WORD INTO LETTERS
         String[] letters = data.split("");
@@ -39,21 +42,18 @@ public class Analysis {
         for (String letter : letters) {
             
             // INJECT IF UNDEFINED, OTHERWISE INCREMENT VALUE
-            container.merge(letter, 1.0, Double::sum); 
+            this.letters.merge(letter, 1.0, Double::sum); 
         }
         
         // MORPH VALUES TO PERCENTAGES
-        this.letters = find_score(container, letters.length);
+        this.letters = percentify(this.letters, letters.length);
     }
     
     // FIND WINDOW OCCURRANCE
-    private void windows() {
-        
-        // DECLARE CONTAINER
-        HashMap<String, Double> container = new HashMap();
+    private void windows(String data) {
         
         // NUKE WHITESPACE
-        String data = this.data.replaceAll("\\s+","");
+        data = data.replaceAll("\\s+","");
         
         // SPLIT THE WORD INTO LETTERS
         String[] letters = data.split("");
@@ -68,21 +68,18 @@ public class Analysis {
             String value = letters[x] + letters[x + 1] + letters[x + 2];
             
             // INJECT IF UNDEFINED, OTHERWISE INCREMENT VALUE
-            container.merge(value, 1.0, Double::sum); 
+            this.windows.merge(value, 1.0, Double::sum); 
         }
         
         // MORPH VALUES TO PERCENTAGES
-        this.windows = find_score(container, count);
+        this.windows = percentify(this.windows, count);
     }
     
     // FIND FIRST LETTERS IN SENTENCES
-    private void firsts() {
-        
-        // DECLARE CONTAINER
-        HashMap<String, Double> container = new HashMap();
+    private void firsts(String data) {
         
         // SPLIT BY SPACE
-        String[] words = this.data.split(" ");
+        String[] words = data.split(" ");
         
         // FIND WORD COUNT
         Integer count = words.length;
@@ -94,18 +91,15 @@ public class Analysis {
             String first_letter = word.substring(0, 1);
             
             // INJECT IF UNDEFINED, OTHERWISE INCREMENT VALUE
-            container.merge(first_letter, 1.0, Double::sum);
+            this.firsts.merge(first_letter, 1.0, Double::sum);
         }
 
         // MORPH VALUES TO PERCENTAGES
-        this.firsts = find_score(container, count);
+        this.firsts = percentify(this.firsts, count);
     }
     
     // CONVERT OCCURRENCE VALUE TO PERCENT
-    private double find_score(HashMap<String, Double> map, Integer length) {
-        
-        // DECLARE SUM
-        double sum = 0;
+    private HashMap<String, Double> percentify(HashMap<String, Double> map, Integer length) {
         
         // LOOP THROUGH EACH
         for (String key : map.keySet()) {
@@ -113,16 +107,15 @@ public class Analysis {
             // FIND PERCENTAGE
             double percent = map.get(key) / length;
             
-            // ADD IT TO THE EXISTING SUM
-            sum += percent;
+            // REPLACE THE OLD VALUE
+            map.replace(key, percent);
         }
         
-        // RETURN THE AVERAGE VALUE
-        return sum / map.size();
+        return map;
     }
     
     // GETTERS
-    public double letter_score() { return this.letters; }
-    public double window_score() { return this.windows; }
-    public double firsts_score() { return this.firsts; }
+    public HashMap<String, Double> get_letters() { return this.letters; }
+    public HashMap<String, Double> get_windows() { return this.windows; }
+    public HashMap<String, Double> get_firsts() { return this.firsts; }
 }

@@ -9,8 +9,9 @@ import java.util.HashMap;
 
 public class Backend {
     
-    // ANALYZED LANGUAGES
-    private HashMap<String, Analysis> data = new HashMap();
+    // ANALYZED DATASET & TEMPLATE HASHMAPS
+    private final HashMap<String, Dataset> data = new HashMap();
+    private final HashMap<String, Double> template = new HashMap();
     
     // CONSTRUCTOR
     public Backend() {
@@ -40,10 +41,13 @@ public class Backend {
             
             // LOAD FILE CONTENT & ANALYZE IT
             String content = load(language);
-            Analysis result = new Analysis(content);
+            Dataset dataset = new Dataset(content);
             
-            // PUSH THE RESULT TO THE HASHMAP
-            data.put(language, result);
+            // PUSH THE INSTANCE RESULTS TO THE DATA HASHMAP
+            data.put(language, dataset);
+            
+            // PUSH LANGUAGE TO TEMPLATE HASHMAP
+            template.put(language, 1.0);
         }
     }
     
@@ -51,7 +55,7 @@ public class Backend {
     private String load(String filename) {
         
         // GENERATE A PATH
-        Path path = Paths.get("samples/" + filename + ".txt");
+        Path path = Paths.get("dataset/" + filename + ".txt");
         
         // CONTENT CONTAINER
         String content = "";
@@ -72,30 +76,54 @@ public class Backend {
     }
     
     // ANALYZE QUERY
-    public void query(String _data) {
+    public void query(String _query) {
         
-        // ANALYZE IT & CLONE A TEMPLATE
-        Analysis query = new Analysis(_data);
+        // FORCE LOWERCASE
+        _query = _query.toLowerCase();
         
-//        HashMap<String, Analysis> template = this.data;
-//        
-//        // LOOP THROUGH EACH ENTRY
-//        for (String key : template.keySet()) {
-//            
-//        }
+        // CLONE A TEMPLATE HASHMAP
+        HashMap<String, Double> temp = this.template;
+        
+        // DECLARE NORMALIZER
+        double normalizer = 1;
+        
+        String query = _query;
+        
+        // NUKE SPACES & SPLIT INTO LETTERS
+        query = query.replaceAll("\\s+","");
+        String[] letters = query.split("");
 
-        // SOMETHING
+        // LOOP THROUGH THE LETTERS
+        for (String letter : letters) {
+            
+            double norm = 1;
+            
+            for (String language : this.data.keySet()) {
+                
+                // FETCH LETTER VALUE
+                double value = this.data.get(language).get_letters().get(letter);
+                
+                norm *= value;
+                
+                double new_value = temp.get(language) * value;
+                temp.replace(language, new_value);
+            }
+            
+            log(norm);
+            normalizer *= norm;
+            log(normalizer);
+        }
+        
+        for (String key : temp.keySet()) {
+            System.out.println(normalizer);
+            System.out.println(key + " => " + temp.get(key) * normalizer);
+        }
     }
     
     private void log(Object content) { System.out.println(content); }
-    
     private void loop(HashMap<String, Double> map) {
-        double sum = 0;
         for (String key : map.keySet()) {
             log(key + " => " + map.get(key));
-            sum += map.get(key);
         }
-        
-        log(sum);
     }
 }

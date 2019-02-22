@@ -5,9 +5,7 @@ public class LangGuesser {
         
         Backend backend = new Backend();
         
-        // DATA
-        String query = "Trump was born and raised in the New York City. Borough of Queens and received an economics degree from the Wharton School";
+        String data = "New York City borough of Queens and received an economics degree from";
+        backend.query(data);
     }
-    
-    public static void log(Object content) { System.out.println(content); }
 }
