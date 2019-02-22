@@ -79,45 +79,10 @@ public class Backend {
     public void query(String _query) {
         
         // FORCE LOWERCASE
-        _query = _query.toLowerCase();
+        Dataset query = new Dataset(_query);
         
         // CLONE A TEMPLATE HASHMAP
         HashMap<String, Double> temp = this.template;
-        
-        // DECLARE NORMALIZER
-        double normalizer = 1;
-        
-        String query = _query;
-        
-        // NUKE SPACES & SPLIT INTO LETTERS
-        query = query.replaceAll("\\s+","");
-        String[] letters = query.split("");
-
-        // LOOP THROUGH THE LETTERS
-        for (String letter : letters) {
-            
-            double norm = 1;
-            
-            for (String language : this.data.keySet()) {
-                
-                // FETCH LETTER VALUE
-                double value = this.data.get(language).get_letters().get(letter);
-                
-                norm *= value;
-                
-                double new_value = temp.get(language) * value;
-                temp.replace(language, new_value);
-            }
-            
-            log(norm);
-            normalizer *= norm;
-            log(normalizer);
-        }
-        
-        for (String key : temp.keySet()) {
-            System.out.println(normalizer);
-            System.out.println(key + " => " + temp.get(key) * normalizer);
-        }
     }
     
     private void log(Object content) { System.out.println(content); }

@@ -23,15 +23,20 @@ public class Dataset {
     // SANITIZE DATA
     private String sanitize(String data) {
         
-        // FORCE LOWERCASE
         data = data.toLowerCase();
+        
+        // NUKE SPECIAL CHARACTERS
+        data = data.replaceAll("[^a-z\\såäöæøüßàèéì'çšžõ]", "");
+               
+        // SHRINK MULTIPLE SPACES INTO ONE
+        data = data.replaceAll("( +)", " ");
         
         return data;
     }
     
     // FIND LETTER OCCURRANCE
     private void letters(String data) {
-            
+        
         // NUKE WHITESPACE
         data = data.replaceAll("\\s+","");
         
