@@ -5,13 +5,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 public class Backend {
     
     // ANALYZED DATASET & TEMPLATE HASHMAPS
     private final HashMap<String, Dataset> data = new HashMap();
-    private final HashMap<String, Double> template = new HashMap();
+    private final ArrayList<Comparison> scores = new ArrayList();
     
     // CONSTRUCTOR
     public Backend() {
@@ -45,9 +47,6 @@ public class Backend {
             
             // PUSH THE INSTANCE RESULTS TO THE DATA HASHMAP
             data.put(language, dataset);
-            
-            // PUSH LANGUAGE TO TEMPLATE HASHMAP
-            template.put(language, 1.0);
         }
     }
     
@@ -81,7 +80,41 @@ public class Backend {
         // FORCE LOWERCASE
         Dataset query = new Dataset(_query);
         
-        // CLONE A TEMPLATE HASHMAP
-        HashMap<String, Double> temp = this.template;
+        // LOOP THROUGH EACH LANGUAGE
+        for(String language : this.data.keySet()) {
+            
+            // CREATE NEW COMPARISON & PUSH IT TO SCORES
+            Comparison results = new Comparison(language, query, this.data.get(language));
+            scores.add(results);
+        }
+        
+        // SORT THE SCORES ARRAYLIST
+        Collections.sort(scores, new sorter());
+        
+        for(Comparison key : scores) {
+            System.out.println(key.language() + " => " + key.average());
+        }
+    }
+    
+    // ARRAYLIST SORTER
+    class sorter implements Comparator<Comparison> {
+
+        // OVERRIDE THE DEFAULT COMPARE METHOD
+        @Override public int compare(Comparison first, Comparison second) {
+            
+            // DEFAULT TO NOT MOVING
+            Integer response = 0;
+            
+            // MOVE ELEMENT FORWARD
+            if (first.average() > second.average()) {
+                response = 1;
+            
+            // MOVE ELEMENT BACKWARD
+            } else if (first.average() < second.average()) {
+                response = -1;
+            }
+            
+            return response;
+        }
     }
 }

@@ -5,7 +5,7 @@ public class LangGuesser {
         
         Backend backend = new Backend();
         
-        String data = "New York City borough of Queens and received an economics degree from";
+        String data = "Nach seiner Rückkehr in die USA wurde Hempl 1889 Assistant Professor of English an der University of Michigan. 1893 wurde er zum Junior Professor ernannt und 1897 zum Professor of English and General Linguistics";
         backend.query(data);
     }
 }
