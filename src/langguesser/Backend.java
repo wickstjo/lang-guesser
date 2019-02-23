@@ -15,6 +15,7 @@ public class Backend {
     private final HashMap<String, String[]> words = new HashMap();
     private final HashMap<String, HashMap<String, Integer>> occurrences = new HashMap();
     private final HashMap<String, HashMap<String, Double>> scores = new HashMap();
+    private final HashMap<String, ArrayList<Double>> results = new HashMap();
     
     // CONSTRUCTOR
     public Backend() {
@@ -168,42 +169,91 @@ public class Backend {
     }
     
     // ANALYZE QUERY
-    public void query(String _query) {
+    public void query(String query) {
         
-        // FORCE LOWERCASE
-        Dataset query = new Dataset(_query);
+        // SANITIZE & SPLIT INTO WORDS
+        query = sanitize(query);
+        String[] _words = query.split(" ");
         
-//        // LOOP THROUGH EACH LANGUAGE
-//        for(String language : this.data.keySet()) {
-//            
-//            // CREATE NEW COMPARISON & PUSH IT TO SCORES
-//            Comparison results = new Comparison(language, query, this.data.get(language));
-//            scores.add(results);
-//        }
-//        
-//        // SORT THE SCORES ARRAYLIST
-//        Collections.sort(scores, new sorter());
-//        
-//        for(Comparison key : scores) {
-//            System.out.println(key.language() + " => " + key.average());
-//        }
+        // LOOP THROUGH THE WORDS
+        for(String word : _words) {
+            
+            // CHECK IF THE WORD EXISTS IN ANY OF THE DATASETS
+            boolean exists = this.occurrences.get("all").containsKey(word);
+            
+            // CONTINUE IF IT DOES, OTHERWISE SKIP
+            if (exists == true) {
+                
+                // LOOP THROUGH ALL LANGUAGES
+                for(String language : this.scores.keySet()) {
+                    
+                    // CHECK IF THE WORD EXISTS IN THE LANGUAGE
+                    exists = this.scores.get(language).containsKey(word);
+                    
+                    // CONTINUE IF IT DOES & LANG ISNT ALL
+                    if (exists == true && language != "all") {
+                        
+                        // FETCH THE VALUE
+                        double value = this.scores.get(language).get(word);
+                        
+                        // IF THE LANGUAGE HASNT BEEN ADDED BEFORE, DO IT NOW
+                        if (this.results.containsKey(language) == false) {
+                            
+                            // CREATE AN EMPTY ARRAYLIST & PUSH LANG
+                            ArrayList<Double> empty = new ArrayList();
+                            this.results.put(language, empty);
+                        }
+                        
+                        // ADD IT TO THE RESULTS ARRAYLIST
+                        this.results.get(language).add(value);
+                    }
+                }
+            }
+        }
+        
+        // CALCULATE THE PRIOR VALUE
+        double prior = 1.0 / (this.occurrences.size() - 1);
+        
+        // DECLARE THE WINNERS ARRAYLIST
+        ArrayList<Dataset> winners = new ArrayList();
+        
+        // LOOP THROUGH EACH LANGUAGE WITH HITS
+        for (String language : this.results.keySet()) {
+            
+            // DEFAULT TO THE VALUE OF PRIOR
+            double sum = prior;
+            
+            // MULTIPLY SUM BY THE KEY VALUE
+            for (double value : this.results.get(language)) { sum *= value; }
+            
+            // ADD A NEW DATASET INSTANCE TO THE WINNERS ARRAYLIST
+            winners.add(new Dataset(language, sum));
+        }
+        
+        // SORT IN DESCENDING ORDER
+        Collections.sort(winners, new sorter());
+        
+        // LOOP OUT RESULTS
+        for (Dataset block : winners) {
+            System.out.println(block.language() + " => " + block.score());
+        }
     }
     
     // ARRAYLIST SORTER
-    class sorter implements Comparator<Comparison> {
+    class sorter implements Comparator<Dataset> {
 
         // OVERRIDE THE DEFAULT COMPARE METHOD
-        @Override public int compare(Comparison first, Comparison second) {
+        @Override public int compare(Dataset first, Dataset second) {
             
             // DEFAULT TO NOT MOVING
             Integer response = 0;
             
             // MOVE ELEMENT FORWARD
-            if (first.average() > second.average()) {
+            if (first.score() > second.score()) {
                 response = 1;
             
             // MOVE ELEMENT BACKWARD
-            } else if (first.average() < second.average()) {
+            } else if (first.score() < second.score()) {
                 response = -1;
             }
             
