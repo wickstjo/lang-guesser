@@ -12,28 +12,25 @@ import java.util.HashMap;
 public class Backend {
     
     // HASHMAPS
-    private final HashMap<String, String[]> words = new HashMap();
-    private final HashMap<String, HashMap<String, Integer>> occurrences = new HashMap();
-    private final HashMap<String, HashMap<String, Double>> scores = new HashMap();
-    private final HashMap<String, ArrayList<Double>> results = new HashMap();
+    private final HashMap<String, Object> dictionary = new HashMap();
+    private final HashMap<String, Dataset> languages = new HashMap();
     
     // CONSTRUCTOR
     public Backend() {
         
-        // DECLARE & FILL LANGUAGE CONTAINER
-        ArrayList<String> languages = new ArrayList();
-        
-        languages.add("swedish");
-        languages.add("finnish");
-        languages.add("norwegian");
-        languages.add("italian");
-        languages.add("french");
-        languages.add("english");
-        languages.add("estonian");
-        languages.add("german");
+        // LIST OF LANGUAGES
+        ArrayList<String> init = new ArrayList();
+            init.add("swedish");
+            init.add("finnish");
+            init.add("norwegian");
+            init.add("italian");
+            init.add("french");
+            init.add("english");
+            init.add("estonian");
+            init.add("german");
         
         // FETCH & PROCESS THE DATASETS
-        process(languages);
+        process(init);
         
         // FIND WORD OCCURRENCE
         find_occurrences();
@@ -45,7 +42,7 @@ public class Backend {
     // ANALYZE LANGUAGES
     private void process(ArrayList<String> languages) {
         
-        // CONTAINER FOR ALL TEXT
+        // CONTAINER FOR ALL WORDS
         String all = "";
         
         // LOOP THROUGH EACH LANGUAGE
@@ -61,13 +58,16 @@ public class Backend {
             // SPLIT IT INTO WORDS
             String[] _words = content.split(" ");
             
-            // PUSH TO HASHMAP
-            this.words.put(language, _words);
+            // CREATE A NEW DATASET INSTANCE & PUSH TO LANG HASHMAP
+            Dataset dataset = new Dataset(language, _words);
+            this.languages.put(language, dataset);
         }
         
-        // SPLIT ALL CONTENT INTO WORDS & PUSH IT TOO
+        // SPLIT ALL INTO WORDS
         String[] all_words = all.split(" ");
-        this.words.put("all", all_words);
+        
+        // LOOP THROUGH AND PUSH INTO DICTIONARY HASHMAP
+        for (String word : all_words) { dictionary.put(word, null); }
     }
     
     // LOAD FILE CONTENT
@@ -113,137 +113,147 @@ public class Backend {
     private void find_occurrences() {
 
         // LOOP THROUGH EACH LANGUAGE
-        for(String language : this.words.keySet()) {
+        for(String language : this.languages.keySet()) {
             
             // CREATE AN EMPTY HASHMAP
             HashMap<String, Integer> template = new HashMap();
             
+            // SHORTHAND TO DATASET
+            Dataset dataset = languages.get(language);
+            
             // LOOP THROUGH EACH WORD
-            for(String word : this.words.get(language)) {
+            for(String word : dataset.words()) {
                 
                 // INJECT IF UNDEFINED, OTHERWISE INCREMENT BY ONE
                 template.merge(word, 1, Integer::sum);
             }
             
-            // PUSH IT TO THE OCCURRENCE HASHMAP
-            this.occurrences.put(language, template);
+            // SET THE DATASET OCCURRENCE HASHMAP
+            dataset.set_occurences(template);
         }
     }
     
     // FIND WORD SCORES
     private void find_scores() {
         
-        // FIND UNIQUE WORD COUNT ACROSS ALL LANGUAGE DATASETS
-        Integer word_in_dictionary = this.occurrences.get("all").size();
+        // FIND UNIQUE WORD COUNT ACROSS ALL LANGUAGES
+        Integer word_in_dictionary = this.dictionary.size();
         
         // LOOP THROUGH EACH LANGUAGE
-        for(String language : this.occurrences.keySet()) {
+        for(String language : this.languages.keySet()) {
             
             // CREATE AN EMPTY HASHMAP
             HashMap<String, Double> template = new HashMap();
             
-            // FIND WORD COUNT IN LANGUAGE DATASET
-            Integer words_in_language = this.words.get(language).length;
+            // SHORTHAND TO DATASET
+            Dataset dataset = languages.get(language);
             
-            // LOOP THROUGH EACH WORD
-            for (String word : this.occurrences.get(language).keySet()) {
+            // FIND WORD COUNT IN LANGUAGE DATASET
+            Integer words_in_language = dataset.words().length;
+            
+            // LOOP THROUGH EACH UNIQUE WORD
+            for (String word : dataset.occurrences().keySet()) {
                 
                 // DEFAULT TO ZERO
                 Integer word_occurrence = 0;
                 
-                // IF THE WORD EXISTS, FETCH IT & UPDATE ^
-                if (this.occurrences.get(language).containsKey(word)) {
-                    word_occurrence = this.occurrences.get(language).get(word);
+                // IF THE WORD EXISTS, OVERWRITE ^
+                if (dataset.occurrences().containsKey(word)) {
+                    word_occurrence = dataset.occurrences().get(word);
                 }
                 
-                // CALCULATE THE WORD SCORE -- FORCE DOUBLE CONVERSION
+                // CALCULATE THE WORD SCORE -- FORCE DOUBLE
                 double score = (double) (word_occurrence + 1) / (double) (words_in_language + word_in_dictionary);
                 
                 // ADD IT TO THE TEMPLATE HASHMAP
                 template.put(word, score);
             }
             
-            // PUSH TO THE SCORES HASHMAP
-            this.scores.put(language, template);
+            // SET THE DATASET OCCURRENCE HASHMAP
+            dataset.set_scores(template);
         }
     }
     
     // ANALYZE QUERY
     public void query(String query) {
         
-        // SANITIZE & SPLIT INTO WORDS
+        // SANITIZE & SPLIT IT INTO WORDS
         query = sanitize(query);
         String[] _words = query.split(" ");
+        
+        // CONTAINER FOR RESULTS
+        HashMap<String, ArrayList<Double>> results = new HashMap();
         
         // LOOP THROUGH THE WORDS
         for(String word : _words) {
             
-            // CHECK IF THE WORD EXISTS IN ANY OF THE DATASETS
-            boolean exists = this.occurrences.get("all").containsKey(word);
+            // CHECK IF THE WORD EXISTS IN DICTIONARY
+            boolean exists = this.dictionary.containsKey(word);
             
             // CONTINUE IF IT DOES, OTHERWISE SKIP
             if (exists == true) {
                 
                 // LOOP THROUGH ALL LANGUAGES
-                for(String language : this.scores.keySet()) {
+                for(String language : this.languages.keySet()) {
+                    
+                    // SHORTHAND TO DATASET
+                    Dataset dataset = languages.get(language);
                     
                     // CHECK IF THE WORD EXISTS IN THE LANGUAGE
-                    exists = this.scores.get(language).containsKey(word);
+                    exists = dataset.scores().containsKey(word);
                     
-                    // CONTINUE IF IT DOES & LANG ISNT ALL
-                    if (exists == true && language != "all") {
+                    // CONTINUE IF IT DOES, OTHERWISE SKIP
+                    if (exists == true) {
                         
-                        // FETCH THE VALUE
-                        double value = this.scores.get(language).get(word);
+                        // FETCH THE WORD SCORE
+                        double value = dataset.scores().get(word);
                         
                         // IF THE LANGUAGE HASNT BEEN ADDED BEFORE, DO IT NOW
-                        if (this.results.containsKey(language) == false) {
-                            
-                            // CREATE AN EMPTY ARRAYLIST & PUSH LANG
+                        if (results.containsKey(language) == false) {
                             ArrayList<Double> empty = new ArrayList();
-                            this.results.put(language, empty);
+                            results.put(language, empty);
                         }
                         
                         // ADD IT TO THE RESULTS ARRAYLIST
-                        this.results.get(language).add(value);
+                        results.get(language).add(value);
                     }
                 }
             }
         }
         
-        // CALCULATE THE PRIOR VALUE
-        double prior = 1.0 / (this.occurrences.size() - 1);
+        // CALCULATE THE PRIOR MULTIPLIER
+        double prior = 1.0 / (this.dictionary.size() - 1);
         
         // DECLARE THE WINNERS ARRAYLIST
-        ArrayList<Dataset> winners = new ArrayList();
+        ArrayList<Unit> winners = new ArrayList();
         
-        // LOOP THROUGH EACH LANGUAGE WITH HITS
-        for (String language : this.results.keySet()) {
+        // LOOP THROUGH EACH LANGUAGE WITH RESULTS
+        for (String language : results.keySet()) {
             
             // DEFAULT TO THE VALUE OF PRIOR
             double sum = prior;
             
             // MULTIPLY SUM BY THE KEY VALUE
-            for (double value : this.results.get(language)) { sum *= value; }
+            for (double value : results.get(language)) { sum *= value; }
             
-            // ADD A NEW DATASET INSTANCE TO THE WINNERS ARRAYLIST
-            winners.add(new Dataset(language, sum));
+            // ADD NEW COMPARISON UNIT TO THE WINNERS LIST
+            winners.add(new Unit(language, sum));
         }
         
-        // SORT IN DESCENDING ORDER
+        // SORT IT IN DESCENDING ORDER
         Collections.sort(winners, new sorter());
         
         // LOOP OUT RESULTS
-        for (Dataset block : winners) {
+        for (Unit block : winners) {
             System.out.println(block.language() + " => " + block.score());
         }
     }
     
     // ARRAYLIST SORTER
-    class sorter implements Comparator<Dataset> {
+    class sorter implements Comparator<Unit> {
 
         // OVERRIDE THE DEFAULT COMPARE METHOD
-        @Override public int compare(Dataset first, Dataset second) {
+        @Override public int compare(Unit first, Unit second) {
             
             // DEFAULT TO NOT MOVING
             Integer response = 0;
