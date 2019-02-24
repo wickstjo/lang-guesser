@@ -181,8 +181,9 @@ public class Backend {
         query = sanitize(query);
         String[] _words = query.split(" ");
         
-        // CONTAINER FOR RESULTS
+        // HASHMAPS
         HashMap<String, ArrayList<Double>> results = new HashMap();
+        ArrayList<Double> normalizers = new ArrayList();
         
         // LOOP THROUGH THE WORDS
         for(String word : _words) {
@@ -193,36 +194,44 @@ public class Backend {
             // CONTINUE IF IT DOES, OTHERWISE SKIP
             if (exists == true) {
                 
+                double normalizer_sum = 1;
+                
                 // LOOP THROUGH ALL LANGUAGES
                 for(String language : this.languages.keySet()) {
                     
                     // SHORTHAND TO DATASET
                     Dataset dataset = languages.get(language);
                     
+                    // DEFAULT VALUE
+                    double value = 1.0;
+                    
                     // CHECK IF THE WORD EXISTS IN THE LANGUAGE
                     exists = dataset.scores().containsKey(word);
                     
-                    // CONTINUE IF IT DOES, OTHERWISE SKIP
-                    if (exists == true) {
-                        
-                        // FETCH THE WORD SCORE
-                        double value = dataset.scores().get(word);
-                        
-                        // IF THE LANGUAGE HASNT BEEN ADDED BEFORE, DO IT NOW
-                        if (results.containsKey(language) == false) {
-                            ArrayList<Double> empty = new ArrayList();
-                            results.put(language, empty);
-                        }
-                        
-                        // ADD IT TO THE RESULTS ARRAYLIST
-                        results.get(language).add(value);
+                    // IF IT DOES, FETCH THE SCORE
+                    if (exists == true) { value = dataset.scores().get(word); }
+
+                    // IF THE LANGUAGE HASNT BEEN ADDED TO RESULTS BEFORE, DO IT NOW
+                    if (results.containsKey(language) == false) {
+                        results.put(language, new ArrayList());
                     }
+
+                    // ADD IT TO THE RESULTS ARRAYLIST
+                    results.get(language).add(value);
+                    
+                    normalizer_sum *= value;
                 }
+                
+                normalizers.add(normalizer_sum);
             }
         }
         
-        // CALCULATE THE PRIOR MULTIPLIER
+        // CALCULATE THE PRIOR & NORMALIZER
         double prior = 1.0 / (this.dictionary.size() - 1);
+        double normalizer = 1.0;
+        
+        // MULTIPLY THE NORMALIZER VALUES WITH EACH OTHER
+        for (double row : normalizers) { normalizer *= row; }
         
         // DECLARE THE WINNERS ARRAYLIST
         ArrayList<Unit> winners = new ArrayList();
@@ -245,7 +254,7 @@ public class Backend {
         
         // LOOP OUT RESULTS
         for (Unit block : winners) {
-            System.out.println(block.language() + " => " + block.score());
+            System.out.println(block.language() + " => " + block.score() / normalizer);
         }
     }
     
