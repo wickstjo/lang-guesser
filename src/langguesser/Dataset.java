@@ -86,7 +86,7 @@ public class Dataset {
 
         // LOOP THROUGH EACH WORD
         for (String word : words) {
-
+        
             // FIRST LETTER OF THE WORD
             String first = word.substring(0, 1);
 

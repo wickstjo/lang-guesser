@@ -3,11 +3,11 @@ package langguesser;
 public class LangGuesser {
     public static void main(String[] args) {
         
-        // FETCH THE BACKEND MODULE
+        // FETCH THE NECESSARY COMPONENTS
         Backend backend = new Backend();
+        UI ui = new UI(backend);
         
         // PERFORM QUERY
-        String data  = "Lavorando allo stesso tempo nell'azienda paterna, la Elizabeth Trump & Son, di cui divenne socio dopo essersi laureato come baccelliere in economia nel 1968; tre anni più tardi rilevò in prima persona la gestione della compagnia, ribattezzandola Trump Organization. Durante la sua carriera";
-        backend.query(data);
+        ui.query();
     }
 }
