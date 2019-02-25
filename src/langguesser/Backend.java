@@ -11,6 +11,7 @@ public class Backend {
 
     // LANGUAGE DATASETS
     private final HashMap<String, Dataset> languages = new HashMap();
+    private HashMap<String, Result> results = new HashMap();
     
     // CONSTRUCTOR
     public Backend() {
@@ -72,10 +73,40 @@ public class Backend {
     // FIND QUERY LANGUAGE
     public void query(String data) {
         
-        // CREATE NEW DATASET
+        // CREATE DATASET FROM QUERY
         Dataset query = new Dataset("query", data);
         
-        // DO THE COMPUTATION HERE
-        System.out.println("QUERY OK!");
+        // LOOP THROUGH EACH QUERY LETTER
+        for (String letter : query.letters().keySet()) {
+        
+            // LOOP THROUGH EACH LANGUAGE
+            for (String language : this.languages.keySet()) {
+                
+                // IF THE LANGUAGE DOESNT HAVE A ENTRY ALREADY, CREATE ONE
+                if (results.containsKey(language) == false) {
+                    results.put(language, new Result(language));
+                }
+                
+                // SHORTHAND
+                Dataset dataset = this.languages.get(language);
+
+                // DEFAULT VALUE
+                double value = 0;
+                
+                // IF THE LETTER EXISTS IN THE DATASET, FETCH ITS VALUE
+                if (dataset.letters().containsKey(letter)) {
+                    value = dataset.letters().get(letter);
+                }
+                
+                // CALCULATE THE ABSOLUTE DIFFERENCE
+                double difference = Math.abs(value - query.letters().get(letter));
+                //System.out.println(language + " " + letter + " => " + difference);
+                
+                // ADD IT TO THE RESULT ARRAYLIST
+                results.get(language).letters().add(difference);
+            }
+            
+            for (Double val )
+        }
     }
 }

@@ -7,9 +7,9 @@ public class Dataset {
     private final String language;
     
     // OCCURRENCE HASHMAPS
-    private final HashMap<String, Integer> letters = new HashMap();
-    private final HashMap<String, Integer> windows = new HashMap();
-    private final HashMap<String, Integer> firsts = new HashMap();
+    private HashMap<String, Double> letters = new HashMap();
+    private HashMap<String, Double> windows = new HashMap();
+    private HashMap<String, Double> firsts = new HashMap();
     
     // CONSTRUCTOR
     public Dataset(String _language, String _data) {
@@ -48,8 +48,11 @@ public class Dataset {
         for (String letter : letters) {
 
             // EITHER PUSH NEW OR INCREMENT EXISTING VALUE BY ONE
-            this.letters.merge(letter, 1, Integer::sum);
+            this.letters.merge(letter, 1.0, Double::sum);
         }
+        
+        // CONVERT TO PERCENT
+        this.letters = percentify(this.letters, letters.length);
     }
     
     // FIND WINDOW OCCURRENCE
@@ -58,15 +61,21 @@ public class Dataset {
         // NUKE SPACES & SPLIT INTO LETTERS
         String[] letters = data.replaceAll("\\s","").split("");
 
+        // FIND WINDOW COUNT
+        Integer window_count = letters.length - 2;
+        
         // LOOP UNTIL X DOESNT HAVE TWO SUCCESSORS
-        for (int x = 0; x < letters.length - 2; x++) {
+        for (int x = 0; x < window_count; x++) {
 
             // STITCH TOGETHER THE WINDOW VALUE
             String window = letters[x] + letters[x + 1] + letters[x + 2];
 
             // EITHER PUSH NEW OR INCREMENT EXISTING VALUE BY ONE
-            this.windows.merge(window, 1, Integer::sum);
+            this.windows.merge(window, 1.0, Double::sum);
         }
+        
+        // CONVERT TO PERCENT
+        this.windows = percentify(this.windows, window_count);
     }
     
     // FIND FIRST LETTER OCCURRENCE
@@ -82,13 +91,32 @@ public class Dataset {
             String first = word.substring(0, 1);
 
             // EITHER PUSH NEW OR INCREMENT EXISTING VALUE BY ONE
-            this.firsts.merge(first, 1, Integer::sum);
+            this.firsts.merge(first, 1.0, Double::sum);
         }
+        
+        // CONVERT TO PERCENT
+        this.firsts = percentify(this.firsts, words.length);
+    }
+    
+    // CONVERT OCCURRENCE TO PERCENT
+    private HashMap<String, Double> percentify(HashMap<String, Double> map, Integer amount) {
+        
+        // LOOP THROUGH THE MAP
+        for (String unit : map.keySet()) {
+            
+            // FIGURE OUT THE NEW VALUE
+            Double new_value = map.get(unit) / amount;
+            
+            // REPLACE THE OLD VALUE
+            map.replace(unit, new_value);
+        }
+        
+        return map;
     }
     
     // GETTERS
     public String language() { return this.language; }
-    public HashMap<String, Integer> letters() { return this.letters; }
-    public HashMap<String, Integer> windows() { return this.windows; }
-    public HashMap<String, Integer> firsts() { return this.firsts; }
+    public HashMap<String, Double> letters() { return this.letters; }
+    public HashMap<String, Double> windows() { return this.windows; }
+    public HashMap<String, Double> firsts() { return this.firsts; }
 }
