@@ -1,12 +1,12 @@
-    package langguesser;
+package langguesser;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-    import java.util.ArrayList;
-    import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.Scanner;
 
-    public class UI {
+public class UI {
 
-        // BACKEND MODULE
+    // BACKEND MODULE
     private final Backend backend;
     
     // FETCH THE SCANNER MODULE
@@ -17,36 +17,42 @@ import java.math.RoundingMode;
     
     // SHORTHANDS FOR LOGGING
     public void log(Object content) { System.out.println(content); }
-    public void error(Object content) { log("\n" + "\u001B[31m" + content + "\u001B[0m" + "\n"); }
-    
+
     // ASK FOR USER INPUT
     public void query() {
         
-        // ASK THE USER FOR TEXT
-        String data = question("TYPE IN TEXT:");
-      
+        // ASK THE QUESTION
+        log("TEXT TO ANALYZE:");
+        String data = scan.nextLine();
+        
         // COMPUTE THE QUERY & FETCH THE RESULTS
         ArrayList<Result> results = backend.query(data);
         
-        // SHOW THE RESULTS -- ROUND TO 5 DECIMALS
-        for (Result result : results) {
-            log(result.language() + " => " + round(result.score(), 5));
-            log("letters => " + result.letter());
-            log("window => " + result.window());
-            log("first => " + result.first() + "\n");
-        }
+        // PRESENT RESULTS
+        summary(results);
     }
     
-    // ASK A QUESTION
-    private String question(String _question) {
+    // PRESENT RESULTS
+    private void summary(ArrayList<Result> results) {
         
-        // ASK THE QUESTION & SAVE THE ANSWER
-        System.out.print(_question + "\n\u00A0\u00A0> ");
-        String answer = scan.next();
-        System.out.println("");
+        // FORMAT & INDEX COUNTER
+        String format = "%1s%15s%10s%10s%10s%10s";
+        int index = 1;
         
-        // OTHERWISE, RETURN THE ANSWER
-        return answer;
+        // HEADERS
+        log("");
+        System.out.format(format, "#", "LANGUAGE", "LETTER", "WINDOW", "FIRST", "SCORE");
+        log("");
+        
+        // SHOW THE RESULTS -- ROUND TO 5 DECIMALS
+        for (Result result : results) {
+            
+            System.out.format(format, index, result.language(), round(result.letter(), 5), round(result.window(), 5), round(result.first(), 5), round(result.score(), 5));
+            System.out.println();
+            
+            // INCREMENT INDEX
+            index++;
+        }
     }
     
     // https://stackoverflow.com/questions/2808535/round-a-double-to-2-decimal-places

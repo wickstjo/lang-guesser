@@ -15,8 +15,8 @@ public class Backend {
     private final HashMap<String, Dataset> languages = new HashMap();
     
     // RENEWABLE QUERY RELATED HASHMAPS
-    private HashMap<String, Result> results = new HashMap();
-    private ArrayList<Result> response = new ArrayList();;
+    private final HashMap<String, Result> results = new HashMap();
+    private final ArrayList<Result> response = new ArrayList();;
     
     // CONSTRUCTOR
     public Backend() {
@@ -105,7 +105,7 @@ public class Backend {
         
         // LOOP THROUGH EACH QUERY LETTER
         for (String letter : query.letters().keySet()) {
-        
+            
             // LOOP THROUGH EACH LANGUAGE
             for (String language : this.languages.keySet()) {
                 
@@ -134,7 +134,7 @@ public class Backend {
         
         // LOOP THROUGH EACH QUERY LETTER
         for (String window : query.windows().keySet()) {
-        
+            
             // LOOP THROUGH EACH LANGUAGE
             for (String language : this.languages.keySet()) {
                 

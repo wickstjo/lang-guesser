@@ -86,12 +86,16 @@ public class Dataset {
 
         // LOOP THROUGH EACH WORD
         for (String word : words) {
-        
-            // FIRST LETTER OF THE WORD
-            String first = word.substring(0, 1);
+            
+            // SKIP WHEN ZERO LENGTH
+            if (word.length() > 0) {
 
-            // EITHER PUSH NEW OR INCREMENT EXISTING VALUE BY ONE
-            this.firsts.merge(first, 1.0, Double::sum);
+                // FIRST LETTER OF THE WORD
+                String first = word.substring(0, 1);
+
+                // EITHER PUSH NEW OR INCREMENT EXISTING VALUE BY ONE
+                this.firsts.merge(first, 1.0, Double::sum);
+            }
         }
         
         // CONVERT TO PERCENT
@@ -104,11 +108,11 @@ public class Dataset {
         // LOOP THROUGH THE MAP
         for (String unit : map.keySet()) {
             
-            // FIGURE OUT THE NEW VALUE
-            Double new_value = map.get(unit) / amount;
+            // FIGURE OUT THE PERCENT VALUE
+            Double percent = map.get(unit) / amount;
             
             // REPLACE THE OLD VALUE
-            map.replace(unit, new_value);
+            map.replace(unit, percent);
         }
         
         return map;
